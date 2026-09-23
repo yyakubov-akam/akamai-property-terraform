@@ -1,0 +1,12 @@
+{
+  "name": "origin",
+  "options": {
+    "originType": "CUSTOMER",
+    "hostname": "example.com",
+    "forwardHostHeader": "ORIGIN_HOSTNAME",
+    "httpPort": 80,
+    "httpsPort": 443,
+    "originSni": true,
+    "verificationMode": "PLATFORM_SETTINGS"
+  }
+}

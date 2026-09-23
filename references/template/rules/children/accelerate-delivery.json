@@ -1,0 +1,191 @@
+{
+  "name": "Accelerate delivery",
+  "comments": "Control the settings related to improving the performance of delivering objects to your users.",
+  "behaviors": [],
+  "criteria": [],
+  "criteriaMustSatisfy": "all",
+  "children": [
+    {
+      "name": "Origin connectivity",
+      "comments": "Optimize the connection between edge and origin.",
+      "behaviors": [
+        {
+          "name": "dnsAsyncRefresh",
+          "options": {
+            "enabled": true,
+            "timeout": "1h"
+          }
+        }
+      ],
+      "criteria": [],
+      "criteriaMustSatisfy": "all",
+      "children": []
+    },
+    {
+      "name": "Protocol optimizations",
+      "comments": "Serve your website using modern and fast protocols.",
+      "behaviors": [
+        {
+          "name": "enhancedAkamaiProtocol",
+          "options": {
+            "display": ""
+          }
+        },
+        {
+          "name": "http3",
+          "options": {
+            "enable": true
+          }
+        },
+        {
+          "name": "http2",
+          "options": {
+            "enabled": ""
+          }
+        },
+        {
+          "name": "allowTransferEncoding",
+          "options": {
+            "enabled": true
+          }
+        },
+        {
+          "name": "sureRoute",
+          "options": {
+            "enableCustomKey": false,
+            "enabled": true,
+            "forceSslForward": false,
+            "raceStatTtl": "30m",
+            "srDownloadLinkTitle": "",
+            "testObjectUrl": "/akamai/sureroute-test-object.html",
+            "toHostStatus": "INCOMING_HH",
+            "type": "PERFORMANCE"
+          }
+        }
+      ],
+      "criteria": [],
+      "criteriaMustSatisfy": "all",
+      "children": []
+    },
+    {
+      "name": "Prefetching",
+      "comments": "Instruct edge servers to retrieve embedded resources before the browser requests them.",
+      "behaviors": [],
+      "criteria": [],
+      "criteriaMustSatisfy": "all",
+      "children": [
+        {
+          "name": "Prefetching objects",
+          "comments": "Define for which HTML pages prefetching should be enabled.",
+          "behaviors": [
+            {
+              "name": "prefetch",
+              "options": {
+                "enabled": true
+              }
+            }
+          ],
+          "criteria": [],
+          "criteriaMustSatisfy": "all",
+          "children": [
+            {
+              "name": "Bots",
+              "comments": "Disable prefetching for specific clients identifying themselves as bots and crawlers. This avoids requesting unnecessary resources from the origin.",
+              "behaviors": [
+                {
+                  "name": "prefetch",
+                  "options": {
+                    "enabled": false
+                  }
+                }
+              ],
+              "criteria": [
+                {
+                  "name": "userAgent",
+                  "options": {
+                    "matchCaseSensitive": false,
+                    "matchOperator": "IS_ONE_OF",
+                    "matchWildcard": true,
+                    "values": [
+                      "*bot*",
+                      "*crawl*",
+                      "*spider*"
+                    ]
+                  }
+                }
+              ],
+              "criteriaMustSatisfy": "all",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Prefetchable objects",
+          "comments": "Define which resources should be prefetched.",
+          "behaviors": [
+            {
+              "name": "prefetchable",
+              "options": {
+                "enabled": true
+              }
+            }
+          ],
+          "criteria": [
+            {
+              "name": "fileExtension",
+              "options": {
+                "matchCaseSensitive": false,
+                "matchOperator": "IS_ONE_OF",
+                "values": [
+                  "css",
+                  "js",
+                  "jpg",
+                  "jpeg",
+                  "jp2",
+                  "png",
+                  "gif",
+                  "svg",
+                  "svgz",
+                  "webp",
+                  "eot",
+                  "woff",
+                  "woff2",
+                  "otf",
+                  "ttf"
+                ]
+              }
+            }
+          ],
+          "criteriaMustSatisfy": "all",
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Adaptive acceleration",
+      "comments": "Automatically and continuously apply performance optimizations to your website using machine learning.",
+      "behaviors": [
+        {
+          "name": "adaptiveAcceleration",
+          "options": {
+            "abLogic": "DISABLED",
+            "enableBrotliCompression": true,
+            "enableForNoncacheable": false,
+            "enablePreconnect": true,
+            "enablePush": true,
+            "enableRo": false,
+            "preloadEnable": true,
+            "source": "MPULSE",
+            "titleHttp2ServerPush": "",
+            "titlePreconnect": "",
+            "titlePreload": "",
+            "titleRo": ""
+          }
+        }
+      ],
+      "criteria": [],
+      "criteriaMustSatisfy": "all",
+      "children": []
+    }
+  ]
+}

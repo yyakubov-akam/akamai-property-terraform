@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "name": "default",
+    "options": {
+      "is_secure": true
+    },
+    "behaviors": [
+      "#include:behaviors/origin.json",
+      "#include:behaviors/origin-ip-acl.json"
+    ],
+    "children": [
+      "#include:children/augment-insights.json",
+      "#include:children/accelerate-delivery.json",
+      "#include:children/offload-origin.json",
+      "#include:children/strengthen-security.json",
+      "#include:children/increase-availability.json",
+      "#include:children/minimize-payload.json"
+    ]
+  }
+}

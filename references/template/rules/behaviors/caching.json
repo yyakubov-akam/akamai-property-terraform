@@ -1,0 +1,6 @@
+{
+  "name": "caching",
+  "options": {
+    "behavior": "NO_STORE"
+  }
+}

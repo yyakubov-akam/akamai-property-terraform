@@ -1,0 +1,21 @@
+# The skill is SKILL.md, README.md, references/ and scripts/. Everything else
+# here is maintainer-only and stays out of the shared repo.
+CLAUDE.md
+SOURCES.md
+archive/
+
+# Generated when the scripts or Terraform run inside the skill folder
+__pycache__/
+*.pyc
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+tfplan
+*.tfplan
+rendered.json
+
+# Editor and OS clutter
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,99 @@
+{
+  "name": "Increase availability",
+  "comments": "Control how to respond when your origin or third parties are slow or even down to minimize the negative impact on user experience.",
+  "behaviors": [],
+  "criteria": [],
+  "criteriaMustSatisfy": "all",
+  "children": [
+    {
+      "name": "Simulate failover",
+      "comments": "Simulate an origin connection problem and test the site failover configuration on the CDN staging network.",
+      "behaviors": [
+        {
+          "name": "breakConnection",
+          "options": {
+            "enabled": true
+          }
+        }
+      ],
+      "criteria": [
+        {
+          "name": "contentDeliveryNetwork",
+          "options": {
+            "matchOperator": "IS",
+            "network": "STAGING"
+          }
+        },
+        {
+          "name": "requestHeader",
+          "options": {
+            "headerName": "breakconnection",
+            "matchCaseSensitiveValue": true,
+            "matchOperator": "IS_ONE_OF",
+            "matchWildcardName": false,
+            "matchWildcardValue": false,
+            "values": [
+              "Your-Secret-Here"
+            ]
+          }
+        }
+      ],
+      "criteriaMustSatisfy": "all",
+      "children": []
+    },
+    {
+      "name": "Site failover",
+      "comments": "Specify how edge servers respond when the origin is not available.",
+      "behaviors": [
+        {
+          "name": "failAction",
+          "options": {
+            "enabled": false
+          }
+        }
+      ],
+      "criteria": [
+        {
+          "name": "originTimeout",
+          "options": {
+            "matchOperator": "ORIGIN_TIMED_OUT"
+          }
+        }
+      ],
+      "criteriaMustSatisfy": "any",
+      "children": []
+    },
+    {
+      "name": "Origin health",
+      "comments": "Monitor the health of your origin by tracking unsuccessful IP connection attempts.",
+      "behaviors": [
+        {
+          "name": "healthDetection",
+          "options": {
+            "maximumReconnects": 2,
+            "retryCount": 3,
+            "retryInterval": "10s"
+          }
+        }
+      ],
+      "criteria": [],
+      "criteriaMustSatisfy": "all",
+      "children": []
+    },
+    {
+      "name": "Script management",
+      "comments": "Enable Script Management to minimize performance and availability impacts from third-party JavaScripts.",
+      "behaviors": [
+        {
+          "name": "scriptManagement",
+          "options": {
+            "enabled": false
+          }
+        }
+      ],
+      "criteria": [],
+      "criteriaMustSatisfy": "all",
+      "children": []
+    }
+  ]
+}

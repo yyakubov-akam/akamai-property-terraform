@@ -1,0 +1,6 @@
+{
+  "name": "originIpAcl",
+  "options": {
+    "enable": true
+  }
+}
