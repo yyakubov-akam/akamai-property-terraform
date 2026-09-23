@@ -62,7 +62,7 @@ rules about when to stop and ask you.
 ### Claude Code
 
 ```bash
-git clone <repo-url> ~/.claude/skills/akamai-property-terraform
+git clone https://github.com/yyakubov-akam/akamai-property-terraform ~/.claude/skills/akamai-property-terraform
 pip install requests edgegrid-python jsonschema
 ```
 
