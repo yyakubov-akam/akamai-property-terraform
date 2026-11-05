@@ -4,6 +4,10 @@ terraform {
       source  = "akamai/akamai"
       version = "10.3.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.1"
+    }
   }
   required_version = ">= 1.0"
 }
@@ -75,11 +79,26 @@ resource "akamai_dns_record" "property-record" {
   ttl        = 300
 }
 
+# Enhanced Debug key: the baselines that enable enhancedDebug need one, and
+# PAPI rejects an empty key at activation (the schema allows it, so Verify
+# doesn't catch it). Generated once per property and kept in state, rather
+# than written into the rule files, because it's a secret: tokens for the
+# Akamai-Debug request header are derived from it. Techdocs allows reusing one
+# key across properties -- set var.debug_key for that. Rotate with
+# `terraform apply -replace=random_id.debug_key`.
+resource "random_id" "debug_key" {
+  byte_length = 32 # 64 hex characters, the length of a UI-generated key
+}
+
 # Default rule tree for the property, assembled from rules/main.json and its
 # #include'd behavior files: https://techdocs.akamai.com/terraform/docs/pm-ds-rules-template
+# In a generated project, rules/ holds one product's baseline, copied from
+# this template's rules/<product>/.
 # cp_code_id/cp_code_name are threaded in as template variables because
-# they're only known from akamai_cp_code.my_cp at apply time -- everything
-# else in the rule tree is static and lives directly in the JSON files.
+# they're only known from akamai_cp_code.my_cp at apply time, and debug_key
+# because it's a secret -- everything else in the rule tree is static and
+# lives directly in the JSON files. A baseline that doesn't use a variable
+# (Ion has no enhancedDebug) ignores it.
 data "akamai_property_rules_template" "default_rule" {
   template_file = abspath("${path.module}/rules/main.json")
 
@@ -93,6 +112,12 @@ data "akamai_property_rules_template" "default_rule" {
     name  = "cp_code_name"
     type  = "string"
     value = akamai_cp_code.my_cp.name
+  }
+
+  variables {
+    name  = "debug_key"
+    type  = "string"
+    value = coalesce(var.debug_key, random_id.debug_key.hex)
   }
 }
 

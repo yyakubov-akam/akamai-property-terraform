@@ -1,6 +1,6 @@
 # Akamai Terraform property catalog, built from techdocs pages
 # source:  https://techdocs.akamai.com/terraform/docs/property/llms.txt
-# built:   2026-09-23
+# built:   2026-10-05
 # entries: 296 (behavior 213, criterion 40, resource 10, data_source 27, guide 6)
 #
 # One line per techdocs page, tab-separated. Naming/discovery only - fetch

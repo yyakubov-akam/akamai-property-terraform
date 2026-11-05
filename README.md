@@ -43,8 +43,9 @@ rules about when to stop and ask you.
 - **You stay in control.** The agent asks when a choice is yours, shows what
   will change, and waits for your yes before every apply. New properties
   activate on staging unless you ask for production.
-- **A solid starting point.** New properties start from Akamai's recommended
-  default rule set, adjusted for your product.
+- **A solid starting point.** New properties start from the default
+  configuration Akamai's UI creates for your product: Ion, Dynamic Site
+  Acceleration, Adaptive Media Delivery, Object Delivery or Download Delivery.
 
 ## What you need
 
@@ -100,7 +101,7 @@ Code.
 In the skill folder, run:
 
 ```bash
-python3 scripts/validate_rules.py references/template/rules/main.json \
+python3 scripts/validate_rules.py references/template/rules/ion/main.json \
     --product prd_SPM --var cp_code_id=12345 --var cp_code_name=test
 ```
 
@@ -130,7 +131,8 @@ Akamai account, the agent shows a summary like this and waits:
 
 A few tips:
 
-- **Name the product** for new properties ("Dynamic Site Acceleration", "Ion").
+- **Name the product** for new properties ("Ion", "Dynamic Site Acceleration",
+  "Adaptive Media Delivery", "Object Delivery", "Download Delivery").
 - **Say "production"** when you mean it. Otherwise changes activate on staging.
 - **Give your email** if you want activation notifications; the default is a
   placeholder.
@@ -139,6 +141,10 @@ A few tips:
 
 - **New properties** use Secure by Default certificates, so your account needs
   Secure by Default access.
+- **Enhanced Debug is on** for Dynamic Site Acceleration, Adaptive Media
+  Delivery, Object Delivery and Download Delivery, with a debug key Terraform
+  generates per property and keeps in its state. To use one key across
+  properties, set `debug_key`.
 - **Some errors only appear at apply** — for example when your contract doesn't
   include a feature. The agent reads the error, fixes what it can or tells you
   what it can't, and asks again before the next apply.

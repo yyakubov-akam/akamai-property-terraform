@@ -2,6 +2,7 @@
 # here is maintainer-only and stays out of the shared repo.
 CLAUDE.md
 SOURCES.md
+BACKLOG.md
 archive/
 
 # Generated when the scripts or Terraform run inside the skill folder
@@ -19,3 +20,7 @@ rendered.json
 .DS_Store
 .vscode/
 .idea/
+
+# Raw UI exports (account/contract IDs, debug keys) used to build rules/<product>/
+tmp/
+properties/

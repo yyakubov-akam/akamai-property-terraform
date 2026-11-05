@@ -33,21 +33,59 @@ decides to stop.
 
 ## Start here
 
-Read `references/template/` before writing or editing anything. It is a working,
-tested property project and is the structural basis for new work as well as the
-reference for existing conventions.
+Read `references/template/` before writing or editing anything. It is a working
+property project and is the structural basis for new work as well as the
+reference for existing conventions. `main.tf` and `variables.tf` are shared by
+every product; the rule tree is not.
 
-**The template's rule tree was built for Ion (`prd_SPM`).** Other products don't
-offer every behavior in it — Dynamic Site Acceleration (`prd_Site_Accel`) has
-neither `adaptiveAcceleration` nor `scriptManagement`, for example. So:
+**Each product has its own baseline rule tree** under `rules/<folder>/`, taken
+from the property Akamai's UI creates for that product. Products differ in more
+than which behaviors they offer: each has behaviors its baseline is built
+around (`segmentedMediaOptimization` and `contentCharacteristicsAMD` for AMD,
+for example), and Verify does not report a missing one: a tree with only
+`origin` and `cpCode` passes every product's schema. So start every new
+property from its product's baseline, never from another product's.
 
-- Behaviors already in the template need no documentation lookup; substitute
-  values and move on.
+| Product | `delivery_product` | Folder | Values to ask the user for |
+|---|---|---|---|
+| Ion | `prd_SPM` | `ion` | origin |
+| Dynamic Site Acceleration | `prd_Site_Accel` | `dsa` | origin |
+| Adaptive Media Delivery | `prd_Adaptive_Media_Delivery` | `amd` | origin; `segmentedMediaOptimization`; `contentCharacteristicsAMD` (formats, segment durations, content type) |
+| Object Delivery | `prd_Obj_Delivery` | `object-delivery` | origin; `contentCharacteristics`; `restrictObjectCaching.maximumSize` |
+| Download Delivery | `prd_Download_Delivery` | `download-delivery` | origin; `contentCharacteristicsDD` |
+
+For a new property, copy the contents of `rules/<folder>/` into the project's
+`rules/` (so `main.tf` finds `rules/main.json`) **and** set `delivery_product`
+to the matching ID. Change one without the other and the tree is for the wrong
+product. Then:
+
+- Behaviors already in the baseline need no documentation lookup; substitute
+  values and move on. The exception is the "values to ask" column: those
+  describe the user's origin and content, so ask instead of keeping the
+  baseline's placeholder, and fetch the behavior's page (Learn) to present the
+  choices. In every baseline, `originCharacteristics` uses `AUTOMATIC`
+  authentication; ask before changing it.
+- `enhancedDebug.debugKey` is `${env.debug_key}`, which `main.tf` fills from
+  `var.debug_key` or a generated `random_id`. Never write a key into the rule
+  files: it's a secret. Don't disable `enhancedDebug` to work around a key
+  error; PAPI rejects an empty key at activation, so check the variable is
+  wired through instead.
 - Whatever the product, the assembled rule tree must pass **Verify** before
-  apply — template behaviors included. "The template is tested" only means it
-  is valid for Ion.
+  apply — baseline behaviors included.
+- The Ion baseline is split into `children/` and `behaviors/` includes; the
+  others are one `main.json` each. Both are valid layouts — keep whichever the
+  baseline uses.
 
-If the product the user names doesn't map to a product ID with certainty, ask.
+For a product without a baseline, say so, start from the closest one, and tell
+the user that behaviors specific to their product may be missing: the
+baselines are the only record of what each product's configuration should
+contain. If the product the user names doesn't map to a product ID with
+certainty, ask.
+
+Object Delivery's ID needs care: techdocs lists `prd_Object_Delivery`, but
+PAPI's schema endpoint answers only to `prd_Obj_Delivery`. If either is
+rejected (at Verify, `plan` or `apply`), stop and tell the user rather than
+switching IDs on your own.
 
 ## Find: resolve the name through the catalog
 
@@ -154,7 +192,8 @@ to PAPI only at apply time, after the property and its first version exist.
 
 ```bash
 python scripts/validate_rules.py <tf dir>/rules/main.json --product <product_id> \
-    --var cp_code_id=12345 --var cp_code_name=placeholder
+    --var cp_code_id=12345 --var cp_code_name=placeholder \
+    --var debug_key=0000000000000000000000000000000000000000000000000000000000000000
 ```
 
 It assembles the tree the way `akamai_property_rules_template` does (resolving
@@ -165,7 +204,9 @@ It assembles the tree the way `akamai_property_rules_template` does (resolving
 - Pass a `--var` for every `variables {}` block of the
   `akamai_property_rules_template` data source, typed as declared: `12345` is a
   number, `true` a bool, anything else a string. Placeholders are fine — the real
-  CP code ID doesn't exist before apply.
+  CP code ID doesn't exist before apply, and the real debug key lives only in
+  Terraform state. A placeholder for a variable the tree doesn't use is
+  harmless.
 - Pass `--rule-format` only if the property pins one; the template leaves it
   unset, which means `latest`.
 - Pass `--section` / `--account-switch-key` if the user's `provider "akamai"`

@@ -41,9 +41,21 @@ variable "delivery_product" {
   # Which Akamai CDN product to use: https://techdocs.akamai.com/terraform/docs/common-identifiers#product-ids
   type    = string
   default = "prd_SPM" # Ion
-  # rules/ was built for Ion. Other products don't offer every behavior in it
-  # (DSA, prd_Site_Accel, lacks adaptiveAcceleration and scriptManagement), so
-  # validate the rule tree against the chosen product before apply.
+  # Must match the product whose baseline was copied into rules/ (the skill's
+  # baselines are in rules/<product>/), and the rule tree must be validated
+  # against this product before apply.
+}
+
+variable "debug_key" {
+  description = "Enhanced Debug key, 64 hex characters. Null generates one for this property."
+  type        = string
+  default     = null
+  sensitive   = true
+
+  validation {
+    condition     = var.debug_key == null || can(regex("^[0-9a-fA-F]{64}$", var.debug_key))
+    error_message = "debug_key must be 64 hex characters."
+  }
 }
 
 variable "activation_network" {

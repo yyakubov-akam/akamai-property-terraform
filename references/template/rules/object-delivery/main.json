@@ -1,0 +1,89 @@
+{
+  "rules": {
+    "name": "default",
+    "children": [],
+    "behaviors": [
+      {
+        "name": "originCharacteristics",
+        "options": {
+          "authenticationMethod": "AUTOMATIC",
+          "country": "UNKNOWN",
+          "authenticationMethodTitle": "",
+          "originLocationTitle": ""
+        }
+      },
+      {
+        "name": "contentCharacteristics",
+        "options": {
+          "catalogSize": "UNKNOWN",
+          "contentType": "UNKNOWN",
+          "objectSize": "UNKNOWN",
+          "popularityDistribution": "UNKNOWN"
+        }
+      },
+      {
+        "name": "restrictObjectCaching",
+        "options": {
+          "maximumSize": ""
+        }
+      },
+      {
+        "name": "origin",
+        "options": {
+          "cacheKeyHostname": "ORIGIN_HOSTNAME",
+          "compress": true,
+          "enableTrueClientIp": true,
+          "forwardHostHeader": "REQUEST_HOST_HEADER",
+          "http2Enabled": true,
+          "http2Title": "",
+          "httpPort": 80,
+          "httpsPort": 443,
+          "minTlsVersion": "DYNAMIC",
+          "originSni": true,
+          "originType": "CUSTOMER",
+          "tlsVersionTitle": "",
+          "trueClientIpClientSetting": false,
+          "trueClientIpHeader": "True-Client-IP",
+          "verificationMode": "PLATFORM_SETTINGS",
+          "hostname": "example.com",
+          "ipVersion": "IPV4",
+          "originCertificate": "",
+          "ports": ""
+        }
+      },
+      {
+        "name": "cpCode",
+        "options": {
+          "value": {
+            "id": "${env.cp_code_id}",
+            "name": "${env.cp_code_name}"
+          }
+        }
+      },
+      {
+        "name": "dynamicThroughtputOptimization",
+        "options": {
+          "enabled": true
+        }
+      },
+      {
+        "name": "http3",
+        "options": {
+          "enable": true
+        }
+      },
+      {
+        "name": "enhancedDebug",
+        "options": {
+          "debugKey": "${env.debug_key}",
+          "disablePragma": true,
+          "enableDebug": true,
+          "generateGrn": true
+        }
+      }
+    ],
+    "options": {
+      "is_secure": true
+    }
+  }
+}
