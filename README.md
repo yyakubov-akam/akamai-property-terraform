@@ -1,163 +1,130 @@
 # Akamai Property Terraform skill
 
-Ask your AI coding agent for Akamai property changes in plain English, and get
-Terraform that's checked against Akamai before anything goes live.
+An [Agent Skill](https://agentskills.io) that lets your AI coding agent create and change Akamai
+properties as Terraform from plain-English requests, checking the result against Akamai before
+anything is applied.
 
 ```
-You:    Create a property for shop.example.com, origin origin.example.com,
-        product Dynamic Site Acceleration
-Agent:  DSA doesn't offer two behaviors in the default rule set (Adaptive
-        acceleration, Script management). Remove them, or switch to Ion?
-You:    Remove them
-Agent:  Plan: 5 resources to add, activation on STAGING. Apply?
+You:    Generate an Akamai property as Terraform: product Dynamic Site Accelerator,
+        origin www.example.com, hostname example.agenobarb.cloud, default caching settings
+
+Agent:  I've generated the Terraform in example.agenobarb.cloud/ and terraform plan
+        ran cleanly. Nothing has been applied.
+
+        Checks
+        - Schema check passed for prd_Site_Accel / latest. It doesn't cover contract
+          entitlements or rules PAPI only runs at apply, so apply could still fail.
+        - terraform validate passed.
+        - Plan: 6 to add, 0 to change, 0 to destroy:
+          - akamai_cp_code.my_cp: new CP code example.agenobarb.cloud
+          - akamai_property.my-property: example.agenobarb.cloud →
+            example.agenobarb.cloud.edgekey.net, Secure by Default (DV) certificate
+          - akamai_dns_record.property-record: Edge DNS CNAME to the edge hostname
+          - akamai_dns_record.dv-validation: CNAME for the certificate's DV challenge
+          - random_id.debug_key: Enhanced Debug key, kept only in Terraform state
+          - akamai_property_activation: activates on STAGING, not production
+        - Nothing existing gets replaced or destroyed.
+
+        Before you apply
+        - notification_emails is still the placeholder noreply@example.com. Add your
+          address to terraform.tfvars if you want activation emails and I'll re-plan.
+        - The CNAME points the public name at Akamai as soon as it's created, even
+          though the property is only on staging. That's how Secure by Default
+          validates the domain.
+
+        Should I run terraform apply tfplan?
 ```
 
-> **Work in progress.** Tested with Claude Code on Dynamic Site Acceleration
-> and Ion. Please report what breaks — see [Feedback](#feedback).
+## Why use it
 
-## Why this exists
+Agents write decent Terraform, but Akamai properties trip them up. UI names don't match API
+names ("Cloud Monitor Instrumentation" is `edgeConnect`), behaviors change faster than model
+training data, products offer different behaviors, and Akamai only rejects a bad rule tree at
+`terraform apply`, one error at a time.
 
-AI agents are good at Terraform, but Akamai properties trip them up:
+With this skill, the agent:
 
-- **Names don't line up.** What the Akamai UI calls "Cloud Monitor
-  Instrumentation" is `edge_connect` in Terraform and `edgeConnect` in the API.
-  An agent guessing from memory often picks the wrong one.
-- **Options change.** Akamai has over 200 behaviors and updates them
-  regularly, so what the model learned in training is often out of date.
-- **Products differ.** A behavior that works on Ion may not exist on Dynamic
-  Site Acceleration.
-- **Mistakes show up late.** Akamai only checks the configuration at
-  `terraform apply`, after the property has already been created. You find out
-  one error at a time.
+- **looks up every behavior in Akamai's techdocs** instead of writing it from memory, using a
+  catalog that maps UI names to Terraform and API names;
+- **validates the whole rule tree against your product's schema** (live, via the Property
+  Manager API) before planning, so "not available for this product" shows up before apply;
+- **starts new properties from the rule set Akamai's UI creates** for Ion, Dynamic Site
+  Acceleration, Adaptive Media Delivery, Object Delivery or Download Delivery;
+- **asks rather than guesses** when a request is ambiguous or a behavior isn't available, and
+  **waits for your yes before every `terraform apply`**. Activations go to staging unless you ask
+  for production.
 
-This skill gives the agent Akamai's own documentation to work from, a way to
-check the configuration against your product before applying it, and clear
-rules about when to stop and ask you.
+## Is it for you?
 
-## What you get
+Try it if you manage Akamai properties, or want to, and have API credentials and an agent that can
+run commands on your machine.
 
-- **Plain-English requests.** Use the names you know from the Akamai UI:
-  "add Cloud Monitor", "enable SiteShield", "don't cache /api/*".
-- **Configuration based on Akamai's docs**, not on the model's memory.
-- **Problems caught before apply**, like a behavior your product doesn't offer.
-- **You stay in control.** The agent asks when a choice is yours, shows what
-  will change, and waits for your yes before every apply. New properties
-  activate on staging unless you ask for production.
-- **A solid starting point.** New properties start from the default
-  configuration Akamai's UI creates for your product: Ion, Dynamic Site
-  Acceleration, Adaptive Media Delivery, Object Delivery or Download Delivery.
+It's probably not a fit if:
 
-## What you need
+- your DNS isn't on **Akamai Edge DNS**: new properties create their DNS records there;
+- your account doesn't have **Secure by Default**: new properties use it for certificates;
 
-- An AI coding agent that supports [Agent Skills](https://agentskills.io) and
-  can run commands on your machine — Claude Code, Codex, GitHub Copilot,
-  Cursor, Gemini CLI and others
-- Python 3.10 or later, [Terraform](https://developer.hashicorp.com/terraform/install)
-  and [jq](https://jqlang.org/download/)
-- Akamai API credentials in `~/.edgerc` (section `[default]`) with access to
-  Property Manager and Edge DNS
-- Your domain's DNS zone on Akamai Edge DNS — other DNS providers won't work
+Existing properties are fine, including ones exported with `akamai terraform export-property`; the
+agent keeps their structure and style.
+
+## Requirements
+
+- An agent that supports Agent Skills and runs commands locally: Claude Code, Codex, GitHub
+  Copilot, Cursor, Gemini CLI and [others](https://agentskills.io/clients)
+- Python 3.10+, [Terraform](https://developer.hashicorp.com/terraform/install),
+  [jq](https://jqlang.org/download/)
+- Akamai API credentials in `~/.edgerc` (section `[default]`) with Property Manager and Edge DNS
+  access
 
 ## Install
 
-### Claude Code
+**Claude Code:**
 
 ```bash
 git clone https://github.com/yyakubov-akam/akamai-property-terraform ~/.claude/skills/akamai-property-terraform
 pip install requests edgegrid-python jsonschema
 ```
 
-That's it — Claude Code picks up the skill automatically and uses it whenever
-you ask for an Akamai property change. (If `~/.claude/skills` didn't exist
-before, restart Claude Code once.) To update later, run `git pull` in that
-folder.
+Claude Code picks the skill up automatically (restart it once if `~/.claude/skills` is new). For a
+single project, clone into `<project>/.claude/skills/akamai-property-terraform` instead. Update with
+`git pull`.
 
-To use it in one project only, clone it into that project's
-`.claude/skills/akamai-property-terraform` instead. Either way, keep the folder
-name. See Claude Code's [skills docs](https://code.claude.com/docs/en/skills)
-for more.
+**Other agents:** clone the same repo into your agent's skills folder and run the same
+`pip install`. See [Codex](https://developers.openai.com/codex/skills/),
+[GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills),
+[Cursor](https://cursor.com/docs/context/skills) or
+[Gemini CLI](https://geminicli.com/docs/cli/skills/). Chat apps that run skills in a cloud sandbox
+won't work: the skill needs your credentials and Terraform.
 
-### Other agents
-
-This skill follows the open [Agent Skills](https://agentskills.io) format, so
-the same folder works in other agents — only the location to put it in
-differs. Clone the repo where your agent looks for skills, and run the same
-`pip install`:
-
-- [OpenAI Codex](https://developers.openai.com/codex/skills/)
-- [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
-  and [VS Code](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
-- [Cursor](https://cursor.com/docs/context/skills)
-- [Gemini CLI](https://geminicli.com/docs/cli/skills/)
-- [All agents that support Agent Skills](https://agentskills.io/clients)
-
-The agent must be able to run commands on your computer, because the skill
-uses your Akamai credentials and Terraform. Chat apps that run skills in a
-cloud sandbox won't work. So far the skill has only been tested with Claude
-Code.
-
-### Check that it works
-
-In the skill folder, run:
+**Check your setup** from the skill folder:
 
 ```bash
 python3 scripts/validate_rules.py references/template/rules/ion/main.json \
     --product prd_SPM --var cp_code_id=12345 --var cp_code_name=test
 ```
 
-If you see `OK: rule tree is valid for prd_SPM / latest`, your Python
-packages, credentials and Akamai connection all work. If not, the message says
-what's missing — usually `~/.edgerc`.
+`OK: rule tree is valid for prd_SPM / latest` means Python, credentials and API access all work.
+Otherwise the message says what's missing (usually `~/.edgerc`).
 
-## Use it
+## Try it
 
-Open your agent in the folder where your property's Terraform lives, or in an
-empty folder for a new property, and ask:
+Open your agent in the folder with your property's Terraform, or in an empty folder for a new one:
 
-- *Create a property for hostname shop.example.com, origin origin.example.com, delivery product Dynamic Site Acceleration*
-- *Configure Cloud Monitor for this property. Destination hostname: logs.example.com*
+- *Create a property for shop.example.com, origin origin.example.com, product Ion*
+- *Configure Cloud Monitor for this property, destination logs.example.com*
 - *Don't cache anything under /api/\**
 - *Ignore utm_\* query parameters in the cache key*
 
-Expect a question or two along the way. Before changing anything in your
-Akamai account, the agent shows a summary like this and waits:
+Name the product for new properties, say "production" when you mean it, and give an email for
+activation notifications (the default is a placeholder). Before a production activation, replace
+the placeholder ticket in `main.tf`'s `compliance_record`.
 
-```
-- akamai_property.my-property — adds an "API" rule matching /api/*, caching NO_STORE
-- akamai_property_activation — activates the new version
-- 0 to add, 2 to change, 0 to destroy
-- Activation network: STAGING
-```
+Some errors only appear at apply, such as a feature your contract doesn't include. The agent reads
+the error, fixes what it can, and asks again before the next apply.
 
-A few tips:
-
-- **Name the product** for new properties ("Ion", "Dynamic Site Acceleration",
-  "Adaptive Media Delivery", "Object Delivery", "Download Delivery").
-- **Say "production"** when you mean it. Otherwise changes activate on staging.
-- **Give your email** if you want activation notifications; the default is a
-  placeholder.
-
-## Good to know
-
-- **New properties** use Secure by Default certificates, so your account needs
-  Secure by Default access.
-- **Enhanced Debug is on** for Dynamic Site Acceleration, Adaptive Media
-  Delivery, Object Delivery and Download Delivery, with a debug key Terraform
-  generates per property and keeps in its state. To use one key across
-  properties, set `debug_key`.
-- **Some errors only appear at apply** — for example when your contract doesn't
-  include a feature. The agent reads the error, fixes what it can or tells you
-  what it can't, and asks again before the next apply.
-- **Property Manager only.** Security configurations (WAF, App & API
-  Protector) and certificates beyond Secure by Default aren't covered.
-- **Before a production activation**, check the `compliance_record` in
-  `main.tf`; it holds a placeholder ticket number.
-
-Want to know how it all works? Everything the agent follows is in
-[SKILL.md](SKILL.md).
+How it all works is in [SKILL.md](SKILL.md).
 
 ## Feedback
 
-Open an issue with the prompt you used, what the agent did, and what you
-expected. Especially useful: the agent stating something as fact that turned
-out to be wrong, or changing something without asking.
+Open an issue with your prompt, what the agent did, and what you expected. Most useful: the agent
+stating something as fact that turned out wrong, or changing something without asking.
