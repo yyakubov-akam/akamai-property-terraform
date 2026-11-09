@@ -38,8 +38,7 @@ Agent:  I've generated the Terraform in example.agenobarb.cloud/ and terraform p
 ## Why use it
 
 Agents write decent Terraform, but Akamai properties trip them up. UI names don't match API
-names ("Cloud Monitor Instrumentation" is `edgeConnect`), behaviors change faster than model
-training data, products offer different behaviors, and Akamai only rejects a bad rule tree at
+names, behaviors change faster than model training data, products offer different behaviors, and Akamai only rejects a bad rule tree at
 `terraform apply`, one error at a time.
 
 With this skill, the agent:
@@ -56,8 +55,7 @@ With this skill, the agent:
 
 ## Is it for you?
 
-Try it if you manage Akamai properties, or want to, and have API credentials and an agent that can
-run commands on your machine.
+Try it to manage Akamai properties with AI agent.
 
 It's probably not a fit if:
 
